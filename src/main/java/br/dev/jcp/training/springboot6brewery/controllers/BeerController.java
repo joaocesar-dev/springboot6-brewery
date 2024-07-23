@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -23,11 +22,12 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/beers")
 public class BeerController {
+    public static final String BEER_PATH = "/api/v1/beers";
+    public static final String BEER_PATH_ID = BEER_PATH + "/{beerId}";
     private final BeerService beerService;
 
-    @PostMapping
+    @PostMapping(value = BEER_PATH)
     public ResponseEntity<Beer> createBeer(@RequestBody Beer beer) {
         Beer newBeer = beerService.saveBeer(beer);
         HttpHeaders headers = new HttpHeaders();
@@ -35,30 +35,30 @@ public class BeerController {
         return new ResponseEntity<>(newBeer, headers, HttpStatus.CREATED);
     }
 
-    @GetMapping
+    @GetMapping(value = BEER_PATH)
     public List<Beer> listBeers(){
         return beerService.listBeers();
     }
 
-    @GetMapping(value = "{beerId}")
+    @GetMapping(value = BEER_PATH_ID)
     public Beer getBeerById(@PathVariable("beerId") UUID beerId){
         log.debug("Get beer by id: {}", beerId);
         return beerService.getBeerById(beerId);
     }
 
-    @PutMapping(value = "{beerId}")
+    @PutMapping(value = BEER_PATH_ID)
     public ResponseEntity<Beer> updateBeer(@PathVariable("beerId") UUID beerId, @RequestBody Beer beer) {
         Beer beerUpdated = beerService.updateBeer(beerId, beer);
         return new ResponseEntity<>(beerUpdated, HttpStatus.OK);
     }
 
-    @PatchMapping("{beerId}")
+    @PatchMapping(value = BEER_PATH_ID)
     public ResponseEntity<String> patchBeer(@PathVariable UUID beerId, @RequestBody Beer beer) {
         beerService.patchBeer(beerId, beer);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping(value = "{beerId}")
+    @DeleteMapping(value = BEER_PATH_ID)
     public ResponseEntity<String> deleteBeer(@PathVariable UUID beerId) {
         beerService.deleteBeer(beerId);
         return ResponseEntity.noContent().build();
