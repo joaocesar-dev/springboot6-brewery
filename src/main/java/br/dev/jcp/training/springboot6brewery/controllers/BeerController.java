@@ -1,5 +1,6 @@
 package br.dev.jcp.training.springboot6brewery.controllers;
 
+import br.dev.jcp.training.springboot6brewery.exception.NotFoundException;
 import br.dev.jcp.training.springboot6brewery.model.Beer;
 import br.dev.jcp.training.springboot6brewery.services.BeerService;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class BeerController {
     @GetMapping(value = BEER_PATH_ID)
     public Beer getBeerById(@PathVariable("beerId") UUID beerId){
         log.debug("Get beer by id: {}", beerId);
-        return beerService.getBeerById(beerId);
+        return beerService.getBeerById(beerId).orElseThrow(NotFoundException::new);
     }
 
     @PutMapping(value = BEER_PATH_ID)

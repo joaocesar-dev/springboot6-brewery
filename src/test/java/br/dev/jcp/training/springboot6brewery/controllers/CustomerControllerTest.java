@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -117,13 +118,20 @@ class CustomerControllerTest {
     @Test
     void shouldReturnCustomerById() throws Exception {
         Customer customer = createPersistedCustomer();
-        given(customerService.getCustomerById(any(UUID.class))).willReturn(customer);
+        given(customerService.getCustomerById(any(UUID.class))).willReturn(Optional.of(customer));
         mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(customer.getId().toString())))
                 .andExpect(jsonPath("$.name", is(customer.getName())));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenCustomerNotFound() throws Exception {
+        given(customerService.getCustomerById(any(UUID.class))).willReturn(Optional.empty());
+        mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 
     @Test

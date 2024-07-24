@@ -1,5 +1,6 @@
 package br.dev.jcp.training.springboot6brewery.controllers;
 
+import br.dev.jcp.training.springboot6brewery.exception.NotFoundException;
 import br.dev.jcp.training.springboot6brewery.model.Customer;
 import br.dev.jcp.training.springboot6brewery.services.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class CustomerController {
 
     @GetMapping(value = CUSTOMER_PATH_ID)
     public Customer getCustomerById(@PathVariable("customerId") UUID id){
-        return customerService.getCustomerById(id);
+        return customerService.getCustomerById(id).orElseThrow(NotFoundException::new);
     }
 
     @PutMapping(value = CUSTOMER_PATH_ID)
