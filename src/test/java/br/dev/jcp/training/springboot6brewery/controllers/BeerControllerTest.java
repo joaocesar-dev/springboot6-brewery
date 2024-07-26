@@ -1,7 +1,7 @@
 package br.dev.jcp.training.springboot6brewery.controllers;
 
-import br.dev.jcp.training.springboot6brewery.model.Beer;
-import br.dev.jcp.training.springboot6brewery.model.BeerStyle;
+import br.dev.jcp.training.springboot6brewery.models.BeerDTO;
+import br.dev.jcp.training.springboot6brewery.models.BeerStyle;
 import br.dev.jcp.training.springboot6brewery.services.BeerService;
 import br.dev.jcp.training.springboot6brewery.services.impl.BeerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -49,6 +50,7 @@ class BeerControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
+    @Qualifier("beerServiceImpl")
     BeerService beerService;
 
     BeerServiceImpl beerServiceImpl;
@@ -57,7 +59,7 @@ class BeerControllerTest {
     ArgumentCaptor<UUID> uuidArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<Beer> beerArgumentCaptor;
+    ArgumentCaptor<BeerDTO> beerArgumentCaptor;
 
     @BeforeEach
     void setUp() {
@@ -66,7 +68,7 @@ class BeerControllerTest {
 
     @Test
     void shouldPatchBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "Changed Name");
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
@@ -81,7 +83,7 @@ class BeerControllerTest {
 
     @Test
     void shouldDeleteBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
         mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -91,22 +93,22 @@ class BeerControllerTest {
 
     @Test
     void shouldUpdateBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().get(0);
-
+        BeerDTO beer = beerServiceImpl.listBeers().get(0);
+        given(beerService.updateBeer(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(beer)))
                 .andExpect(status().isOk());
-        verify(beerService).updateBeer(any(UUID.class), any(Beer.class));
+        verify(beerService).updateBeer(any(UUID.class), any(BeerDTO.class));
     }
 
     @Test
     void shouldReturnANewBeer() throws Exception {
-        Beer newBeer = createInputBeer();
-        Beer persistedBeer = becamesInputBeerToPersistedBeer(newBeer);
+        BeerDTO newBeer = createInputBeer();
+        BeerDTO persistedBeer = becamesInputBeerToPersistedBeer(newBeer);
 
-        given(beerService.saveBeer(any(Beer.class))).willReturn(persistedBeer);
+        given(beerService.saveBeer(any(BeerDTO.class))).willReturn(Optional.of(persistedBeer));
 
         mockMvc.perform(post(BeerController.BEER_PATH)
                     .accept(MediaType.APPLICATION_JSON)
@@ -122,7 +124,7 @@ class BeerControllerTest {
     @Test
     void shouldReturnABeerById() throws Exception {
 
-        Beer testBeer = createPersistedBeer();
+        BeerDTO testBeer = createPersistedBeer();
 
         given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.of(testBeer));
 
@@ -152,8 +154,8 @@ class BeerControllerTest {
                 .andExpect(jsonPath("$.length()", is(3)));
     }
 
-    private Beer createPersistedBeer() {
-         return Beer.builder()
+    private BeerDTO createPersistedBeer() {
+         return BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
                 .beerName("Test Beer")
@@ -166,8 +168,8 @@ class BeerControllerTest {
                 .build();
     }
 
-    private Beer createInputBeer() {
-        return Beer.builder()
+    private BeerDTO createInputBeer() {
+        return BeerDTO.builder()
                 .beerName("Test New Beer")
                 .beerStyle(BeerStyle.PILSNER)
                 .upc("121212121")
@@ -176,8 +178,8 @@ class BeerControllerTest {
                 .build();
     }
 
-    private Beer becamesInputBeerToPersistedBeer(Beer inputBeer) {
-        return Beer.builder()
+    private BeerDTO becamesInputBeerToPersistedBeer(BeerDTO inputBeer) {
+        return BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
                 .beerName(inputBeer.getBeerName())
@@ -190,11 +192,11 @@ class BeerControllerTest {
                 .build();
     }
 
-    private List<Beer> createPersistedBeerList() {
-        List<Beer> beerList = new ArrayList<>();
-        Beer testBeer = createPersistedBeer();
+    private List<BeerDTO> createPersistedBeerList() {
+        List<BeerDTO> beerList = new ArrayList<>();
+        BeerDTO testBeer = createPersistedBeer();
         beerList.add(testBeer);
-        beerList.add(Beer.builder()
+        beerList.add(BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
                 .beerName("Test Beer 2")
@@ -205,7 +207,7 @@ class BeerControllerTest {
                 .createdDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .build());
-        beerList.add(Beer.builder()
+        beerList.add(BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
                 .beerName("Test Beer 3")

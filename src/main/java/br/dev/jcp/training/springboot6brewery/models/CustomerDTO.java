@@ -1,4 +1,4 @@
-package br.dev.jcp.training.springboot6brewery.model;
+package br.dev.jcp.training.springboot6brewery.models;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Builder
 @Data
-public class Customer {
+public class CustomerDTO {
     private UUID id;
     private String name;
     private Integer version;

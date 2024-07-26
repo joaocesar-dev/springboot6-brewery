@@ -1,7 +1,7 @@
 package br.dev.jcp.training.springboot6brewery.controllers;
 
-import br.dev.jcp.training.springboot6brewery.exception.NotFoundException;
-import br.dev.jcp.training.springboot6brewery.model.Customer;
+import br.dev.jcp.training.springboot6brewery.exceptions.NotFoundException;
+import br.dev.jcp.training.springboot6brewery.models.CustomerDTO;
 import br.dev.jcp.training.springboot6brewery.services.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -31,38 +32,43 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping(value = CUSTOMER_PATH)
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        Customer newCustomer = customerService.saveCustomer(customer);
+    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customer) {
+        CustomerDTO newCustomer = customerService.saveCustomer(customer);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/api/v1/customers/" + newCustomer.getId());
         return new ResponseEntity<>(newCustomer, headers, HttpStatus.CREATED);
     }
 
     @GetMapping(value = CUSTOMER_PATH)
-    public List<Customer> listAllCustomers(){
+    public List<CustomerDTO> listAllCustomers(){
         return customerService.getAllCustomers();
     }
 
     @GetMapping(value = CUSTOMER_PATH_ID)
-    public Customer getCustomerById(@PathVariable("customerId") UUID id){
+    public CustomerDTO getCustomerById(@PathVariable("customerId") UUID id){
         return customerService.getCustomerById(id).orElseThrow(NotFoundException::new);
     }
 
     @PutMapping(value = CUSTOMER_PATH_ID)
-    public ResponseEntity<Customer> updateCustomer(@PathVariable UUID customerId, @RequestBody Customer customer) {
-        Customer customerUpdated = customerService.updateCustomer(customerId, customer);
-        return new ResponseEntity<>(customerUpdated, HttpStatus.OK);
+    public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable UUID customerId, @RequestBody CustomerDTO customer) {
+        Optional<CustomerDTO> customerUpdated = customerService.updateCustomer(customerId, customer);
+        if (customerUpdated.isPresent()) {
+            return new ResponseEntity<>(customerUpdated.get(), HttpStatus.OK);
+        }
+        throw new NotFoundException();
     }
 
     @PatchMapping(CUSTOMER_PATH_ID)
-    public ResponseEntity<String> patchCustomer(@PathVariable UUID customerId, @RequestBody Customer customer) {
+    public ResponseEntity<String> patchCustomer(@PathVariable UUID customerId, @RequestBody CustomerDTO customer) {
         customerService.patchCustomer(customerId, customer);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping(value = CUSTOMER_PATH_ID)
     public ResponseEntity<String> deleteCustomer(@PathVariable UUID customerId) {
-        customerService.deleteCustomer(customerId);
+        if (!customerService.deleteCustomer(customerId)) {
+            throw new NotFoundException();
+        }
         return ResponseEntity.noContent().build();
     }
 

@@ -1,6 +1,6 @@
 package br.dev.jcp.training.springboot6brewery.controllers;
 
-import br.dev.jcp.training.springboot6brewery.model.Customer;
+import br.dev.jcp.training.springboot6brewery.models.CustomerDTO;
 import br.dev.jcp.training.springboot6brewery.services.CustomerService;
 import br.dev.jcp.training.springboot6brewery.services.impl.CustomerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,7 +54,7 @@ class CustomerControllerTest {
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor;
     @Captor
-    ArgumentCaptor<Customer> customerArgumentCaptor;
+    ArgumentCaptor<CustomerDTO> customerArgumentCaptor;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +63,7 @@ class CustomerControllerTest {
 
     @Test
     void shouldPatchCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "John Doe");
         mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
@@ -77,7 +77,7 @@ class CustomerControllerTest {
 
     @Test
     void shouldDeleteCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
         mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                     .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -87,22 +87,22 @@ class CustomerControllerTest {
 
     @Test
     void shouldUpdateCustomer() throws Exception {
-        Customer customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
 
         mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(customer)))
                 .andExpect(status().isOk());
-        verify(customerService).updateCustomer(any(UUID.class), any(Customer.class));
+        verify(customerService).updateCustomer(any(UUID.class), any(CustomerDTO.class));
     }
 
     @Test
     void shouldReturnANewCustomer() throws Exception {
-        Customer newCustomer = createInputCustomer();
-        Customer persistedCustomer = createPersistedCustomer(newCustomer);
+        CustomerDTO newCustomer = createInputCustomer();
+        CustomerDTO persistedCustomer = createPersistedCustomer(newCustomer);
 
-        given(customerService.saveCustomer(any(Customer.class))).willReturn(persistedCustomer);
+        given(customerService.saveCustomer(any(CustomerDTO.class))).willReturn(persistedCustomer);
 
         mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
                     .accept(MediaType.APPLICATION_JSON)
@@ -117,7 +117,7 @@ class CustomerControllerTest {
 
     @Test
     void shouldReturnCustomerById() throws Exception {
-        Customer customer = createPersistedCustomer();
+        CustomerDTO customer = createPersistedCustomer();
         given(customerService.getCustomerById(any(UUID.class))).willReturn(Optional.of(customer));
         mockMvc.perform(get(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                 .accept(MediaType.APPLICATION_JSON))
@@ -145,14 +145,14 @@ class CustomerControllerTest {
 
     }
 
-    private Customer createInputCustomer() {
-        return Customer.builder()
+    private CustomerDTO createInputCustomer() {
+        return CustomerDTO.builder()
                 .name("New Customer")
                 .build();
     }
 
-    private Customer createPersistedCustomer(Customer customer) {
-        return Customer.builder()
+    private CustomerDTO createPersistedCustomer(CustomerDTO customer) {
+        return CustomerDTO.builder()
                 .id(UUID.randomUUID())
                 .name(customer.getName())
                 .version(1)
@@ -161,8 +161,8 @@ class CustomerControllerTest {
                 .build();
     }
 
-    private Customer createPersistedCustomer() {
-        return Customer.builder()
+    private CustomerDTO createPersistedCustomer() {
+        return CustomerDTO.builder()
                 .id(UUID.randomUUID())
                 .name("Customer Test 1")
                 .version(1)
@@ -171,17 +171,17 @@ class CustomerControllerTest {
                 .build();
     }
 
-    private List<Customer> createPersistedCustomers() {
-        ArrayList<Customer> list = new ArrayList<>();
+    private List<CustomerDTO> createPersistedCustomers() {
+        ArrayList<CustomerDTO> list = new ArrayList<>();
         list.add(createPersistedCustomer());
-        list.add(Customer.builder()
+        list.add(CustomerDTO.builder()
                 .id(UUID.randomUUID())
                 .name("Customer Test 2")
                 .version(1)
                 .createdDate(LocalDateTime.now())
                 .updateDate(LocalDateTime.now())
                 .build());
-        list.add(Customer.builder()
+        list.add(CustomerDTO.builder()
                 .id(UUID.randomUUID())
                 .name("Customer Test 3")
                 .version(1)

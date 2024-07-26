@@ -1,4 +1,4 @@
-package br.dev.jcp.training.springboot6brewery.exception;
+package br.dev.jcp.training.springboot6brewery.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

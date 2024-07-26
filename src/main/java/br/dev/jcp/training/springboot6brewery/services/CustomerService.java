@@ -1,16 +1,16 @@
 package br.dev.jcp.training.springboot6brewery.services;
 
-import br.dev.jcp.training.springboot6brewery.model.Customer;
+import br.dev.jcp.training.springboot6brewery.models.CustomerDTO;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerService {
-    Optional<Customer> getCustomerById(UUID uuid);
-    List<Customer> getAllCustomers();
-    Customer saveCustomer(Customer customer);
-    Customer updateCustomer(UUID customerId, Customer customer);
-    void deleteCustomer(UUID customerId);
-    void patchCustomer(UUID customerId, Customer customer);
+    Optional<CustomerDTO> getCustomerById(UUID uuid);
+    List<CustomerDTO> getAllCustomers();
+    CustomerDTO saveCustomer(CustomerDTO customer);
+    Optional<CustomerDTO> updateCustomer(UUID customerId, CustomerDTO customer);
+    Boolean deleteCustomer(UUID customerId);
+    Optional<CustomerDTO> patchCustomer(UUID customerId, CustomerDTO customer);
 }
