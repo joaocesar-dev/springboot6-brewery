@@ -107,7 +107,6 @@ public class BeerServiceImpl implements BeerService {
         beerToUpdate.setPrice(beer.getPrice());
         beerToUpdate.setUpc(beer.getUpc());
         beerToUpdate.setQuantityOnHand(beer.getQuantityOnHand());
-
         beerToUpdate.setUpdateDate(LocalDateTime.now());
 
         beerMap.put(beerId, beerToUpdate);
@@ -116,7 +115,7 @@ public class BeerServiceImpl implements BeerService {
     }
 
     @Override
-    public void patchBeer(UUID beerId, BeerDTO beer) {
+    public Optional<BeerDTO> patchBeer(UUID beerId, BeerDTO beer) {
         log.info("Patching beer with id: {}", beerId);
         BeerDTO beerPatched = beerMap.get(beerId);
         if (StringUtils.hasText(beer.getBeerName())) {
@@ -135,6 +134,7 @@ public class BeerServiceImpl implements BeerService {
             beerPatched.setQuantityOnHand(beer.getQuantityOnHand());
         }
         beerPatched.setUpdateDate(LocalDateTime.now());
+        return Optional.of(beerPatched);
     }
 
     @Override

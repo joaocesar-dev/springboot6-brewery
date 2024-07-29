@@ -14,7 +14,7 @@ class CustomerRepositoryTest {
     private CustomerRepository customerRepository;
 
     @Test
-    void shouldReturnASavedBeer() {
+    void shouldReturnASavedCustomer() {
         Customer savedCustomer = customerRepository.save(Customer.builder().name("Test Customer").build());
         assertThat(savedCustomer).isNotNull();
         assertThat(savedCustomer.getId()).isNotNull();

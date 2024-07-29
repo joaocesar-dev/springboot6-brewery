@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -50,7 +51,7 @@ public class BeerController {
     }
 
     @PutMapping(value = BEER_PATH_ID)
-    public ResponseEntity<BeerDTO> updateBeer(@PathVariable("beerId") UUID beerId, @RequestBody BeerDTO beer) {
+    public ResponseEntity<BeerDTO> updateBeer(@PathVariable("beerId") UUID beerId, @Validated @RequestBody BeerDTO beer) {
         Optional<BeerDTO> beerUpdated = beerService.updateBeer(beerId, beer);
         if (beerUpdated.isEmpty()) {
             throw new NotFoundException();
@@ -60,7 +61,10 @@ public class BeerController {
 
     @PatchMapping(value = BEER_PATH_ID)
     public ResponseEntity<String> patchBeer(@PathVariable UUID beerId, @RequestBody BeerDTO beer) {
-        beerService.patchBeer(beerId, beer);
+        Optional<BeerDTO> beerUpdated = beerService.patchBeer(beerId, beer);
+        if (beerUpdated.isEmpty()) {
+            throw new NotFoundException();
+        }
         return ResponseEntity.noContent().build();
     }
 

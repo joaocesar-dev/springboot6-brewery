@@ -9,12 +9,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,7 +30,7 @@ public class BeerServiceJPA implements BeerService {
         return beerRepository.findAll()
                 .stream()
                 .map(beerMapper::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -45,19 +45,39 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public Optional<BeerDTO> updateBeer(UUID beerId, BeerDTO beer) {
-        Beer beerEntity = beerRepository.findById(beerId).orElse(null);
-        if (Objects.nonNull(beerEntity)) {
-            beerEntity.setBeerName(beer.getBeerName());
-            beerEntity.setBeerStyle(beer.getBeerStyle());
-            beerEntity.setUpc(beer.getUpc());
-            beerEntity.setPrice(beer.getPrice());
-            beerRepository.save(beerEntity);
+        Optional<Beer> beerEntity = beerRepository.findById(beerId);
+        if (beerEntity.isPresent()) {
+            beerEntity.get().setBeerName(beer.getBeerName());
+            beerEntity.get().setBeerStyle(beer.getBeerStyle());
+            beerEntity.get().setUpc(beer.getUpc());
+            beerEntity.get().setPrice(beer.getPrice());
+            beerRepository.save(beerEntity.get());
         }
-       return Objects.nonNull(beerEntity) ? Optional.of(beerMapper.toDTO(beerEntity)) : Optional.empty();
+       return beerEntity.map(beerMapper::toDTO);
     }
 
     @Override
-    public void patchBeer(UUID beerId, BeerDTO beer) {
+    public Optional<BeerDTO> patchBeer(UUID beerId, BeerDTO beer) {
+        Optional<Beer> beerEntity = beerRepository.findById(beerId);
+        if (beerEntity.isPresent()) {
+            if (StringUtils.hasText(beer.getBeerName())) {
+                beerEntity.get().setBeerName(beer.getBeerName());
+            }
+            if (Objects.nonNull(beer.getBeerStyle())) {
+                beerEntity.get().setBeerStyle(beer.getBeerStyle());
+            }
+            if (StringUtils.hasText(beer.getUpc())) {
+                beerEntity.get().setUpc(beer.getUpc());
+            }
+            if (Objects.nonNull(beer.getPrice())) {
+                beerEntity.get().setPrice(beer.getPrice());
+            }
+            if (Objects.nonNull(beer.getQuantityOnHand())) {
+                beerEntity.get().setQuantityOnHand(beer.getQuantityOnHand());
+            }
+            beerRepository.save(beerEntity.get());
+        }
+        return beerEntity.map(beerMapper::toDTO);
     }
 
     @Override

@@ -68,7 +68,7 @@ class BeerControllerTest {
 
     @Test
     void shouldPatchBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "Changed Name");
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
@@ -78,12 +78,13 @@ class BeerControllerTest {
                 .andExpect(status().isNoContent());
         verify(beerService).patchBeer(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
         assertThat(beer.getId()).isEqualTo(uuidArgumentCaptor.getValue());
-        assertThat(beerMap.get("beerName")).isEqualTo(beerArgumentCaptor.getValue().getBeerName());
+        assertThat(beerMap).containsEntry("beerName", "Changed Name");
     }
 
     @Test
     void shouldDeleteBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
+        given(beerService.deleteBeer(any())).willReturn(true);
         mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -93,7 +94,7 @@ class BeerControllerTest {
 
     @Test
     void shouldUpdateBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers().get(0);
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
         given(beerService.updateBeer(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON)
@@ -101,6 +102,19 @@ class BeerControllerTest {
                     .content(objectMapper.writeValueAsString(beer)))
                 .andExpect(status().isOk());
         verify(beerService).updateBeer(any(UUID.class), any(BeerDTO.class));
+    }
+
+    @Test
+    void shouldReturnBadRequestUpdateWithBlankName() throws Exception {
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
+        beer.setBeerName("");
+        given(beerService.updateBeer(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
+        mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(beer)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.length()", is(1)));
     }
 
     @Test
