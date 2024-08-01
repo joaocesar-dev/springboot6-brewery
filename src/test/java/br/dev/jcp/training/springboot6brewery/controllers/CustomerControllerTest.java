@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -47,6 +48,7 @@ class CustomerControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
+    @Qualifier("customerServiceImpl")
     private CustomerService customerService;
 
     CustomerServiceImpl customerServiceImpl;
@@ -63,13 +65,16 @@ class CustomerControllerTest {
 
     @Test
     void shouldPatchCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
         Map<String, Object> customerMap = new HashMap<>();
         customerMap.put("name", "John Doe");
+        customer.setName("John Doe");
+        given(customerService.patchCustomer(any(UUID.class), any(CustomerDTO.class))).willReturn(Optional.of(customer));
         mockMvc.perform(patch(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(customerMap)))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("John Doe")));
         verify(customerService).patchCustomer(uuidArgumentCaptor.capture(), customerArgumentCaptor.capture());
         assertThat(uuidArgumentCaptor.getValue()).isEqualTo(customer.getId());
         assertThat(customerArgumentCaptor.getValue().getName()).isEqualTo(customerMap.get("name"));
@@ -77,7 +82,8 @@ class CustomerControllerTest {
 
     @Test
     void shouldDeleteCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        given(customerService.deleteCustomer(any(UUID.class))).willReturn(true);
         mockMvc.perform(delete(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                     .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -87,8 +93,8 @@ class CustomerControllerTest {
 
     @Test
     void shouldUpdateCustomer() throws Exception {
-        CustomerDTO customer = customerServiceImpl.getAllCustomers().get(0);
-
+        CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+        given(customerService.updateCustomer(any(UUID.class), any(CustomerDTO.class))).willReturn(Optional.of(customer));
         mockMvc.perform(put(CustomerController.CUSTOMER_PATH_ID, customer.getId())
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)

@@ -60,12 +60,12 @@ public class BeerController {
     }
 
     @PatchMapping(value = BEER_PATH_ID)
-    public ResponseEntity<String> patchBeer(@PathVariable UUID beerId, @RequestBody BeerDTO beer) {
+    public ResponseEntity<BeerDTO> patchBeer(@PathVariable UUID beerId, @RequestBody BeerDTO beer) {
         Optional<BeerDTO> beerUpdated = beerService.patchBeer(beerId, beer);
         if (beerUpdated.isEmpty()) {
             throw new NotFoundException();
         }
-        return ResponseEntity.noContent().build();
+        return new ResponseEntity<>(beerUpdated.get(), HttpStatus.OK);
     }
 
     @DeleteMapping(value = BEER_PATH_ID)

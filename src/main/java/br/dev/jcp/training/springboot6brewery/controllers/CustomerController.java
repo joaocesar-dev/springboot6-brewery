@@ -59,9 +59,12 @@ public class CustomerController {
     }
 
     @PatchMapping(CUSTOMER_PATH_ID)
-    public ResponseEntity<String> patchCustomer(@PathVariable UUID customerId, @RequestBody CustomerDTO customer) {
-        customerService.patchCustomer(customerId, customer);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<CustomerDTO> patchCustomer(@PathVariable UUID customerId, @RequestBody CustomerDTO customer) {
+        Optional<CustomerDTO> customerUpdated = customerService.patchCustomer(customerId, customer);
+        if (customerUpdated.isPresent()) {
+            return new ResponseEntity<>(customerUpdated.get(), HttpStatus.OK);
+        }
+        throw new NotFoundException();
     }
 
     @DeleteMapping(value = CUSTOMER_PATH_ID)

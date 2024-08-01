@@ -67,7 +67,7 @@ public class CustomerServiceJPA implements CustomerService {
     }
 
     @Override
-    public Boolean deleteCustomer(UUID customerId) {
+    public boolean deleteCustomer(UUID customerId) {
         if (customerRepository.existsById(customerId)) {
             customerRepository.deleteById(customerId);
             return true;

@@ -99,7 +99,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Boolean deleteCustomer(UUID customerId) {
+    public boolean deleteCustomer(UUID customerId) {
         log.info("Deleting customer with id {}", customerId);
         customerMap.remove(customerId);
         return true;

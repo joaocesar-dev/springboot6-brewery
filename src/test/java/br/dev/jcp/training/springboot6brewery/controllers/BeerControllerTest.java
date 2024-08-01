@@ -71,14 +71,16 @@ class BeerControllerTest {
         BeerDTO beer = beerServiceImpl.listBeers().getFirst();
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "Changed Name");
+        beer.setBeerName("Changed Name");
+        given(beerService.patchBeer(any(), any())).willReturn(Optional.of(beer));
         mockMvc.perform(patch(BeerController.BEER_PATH_ID, beer.getId())
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(beerMap)))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.beerName", is("Changed Name")));
         verify(beerService).patchBeer(uuidArgumentCaptor.capture(), beerArgumentCaptor.capture());
         assertThat(beer.getId()).isEqualTo(uuidArgumentCaptor.getValue());
-        assertThat(beerMap).containsEntry("beerName", "Changed Name");
     }
 
     @Test
