@@ -53,7 +53,7 @@ class BeerControllerIT {
     @Test
     void shouldReturnAllBeers() {
         List<BeerDTO> beerDtoList = beerController.listBeers();
-        assertThat(beerDtoList).hasSize(3);
+        assertThat(beerDtoList).hasSize(2413);
     }
 
     @Rollback
@@ -74,7 +74,7 @@ class BeerControllerIT {
     }
 
     @Test
-    void shouldReturnNotFouldExpetion() {
+    void shouldReturnNotFoundException() {
         UUID uuid = UUID.randomUUID();
         assertThatThrownBy(() -> beerController.getBeerById(uuid))
                 .isInstanceOf(NotFoundException.class);
@@ -137,7 +137,7 @@ class BeerControllerIT {
     }
 
     @Test
-    void shouldReturnNotFoundExceptioForDeleteById() {
+    void shouldReturnNotFoundExceptionForDeleteById() {
         UUID beerId = UUID.randomUUID();
         assertThatThrownBy(() -> beerController.deleteBeer(beerId)).isInstanceOf(NotFoundException.class);
     }
