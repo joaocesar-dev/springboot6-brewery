@@ -3,8 +3,10 @@ package br.dev.jcp.training.springboot6brewery.controllers;
 import br.dev.jcp.training.springboot6brewery.entities.Beer;
 import br.dev.jcp.training.springboot6brewery.exceptions.NotFoundException;
 import br.dev.jcp.training.springboot6brewery.models.BeerDTO;
+import br.dev.jcp.training.springboot6brewery.models.BeerStyle;
 import br.dev.jcp.training.springboot6brewery.repositories.BeerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -52,8 +57,55 @@ class BeerControllerIT {
 
     @Test
     void shouldReturnAllBeers() {
-        List<BeerDTO> beerDtoList = beerController.listBeers();
+        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true);
         assertThat(beerDtoList).hasSize(2413);
+    }
+
+    @Test
+    void shouldReturnBeersByName() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(336)));
+    }
+
+    @Test
+    void shouldReturnBeersByStyle() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerStyle", BeerStyle.IPA.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(548)));
+    }
+
+    @Test
+    void shouldReturnBeersByNameAndStyle() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(310)));
+    }
+
+    @Test
+    void shouldReturnBeersByNameAndStyleAndShowInventory() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(310)))
+                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.notNullValue()));
+    }
+
+    @Test
+    void shouldReturnBeersByNameAndStyleAndNotShowInventory() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()", is(310)))
+                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.nullValue()));
     }
 
     @Rollback
@@ -61,7 +113,7 @@ class BeerControllerIT {
     @Test
     void shouldReturnEmptyList() {
         beerRepository.deleteAll();
-        List<BeerDTO> beerDtoList = beerController.listBeers();
+        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true);
         assertThat(beerDtoList).isEmpty();
     }
 
@@ -104,7 +156,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void shouldUpdateBeer() {
-        BeerDTO beerDTO = beerController.listBeers().getFirst();
+        BeerDTO beerDTO = beerController.listBeers(null, null, true).getFirst();
         UUID beerId = beerDTO.getId();
         beerDTO.setId(null);
         beerDTO.setVersion(null);

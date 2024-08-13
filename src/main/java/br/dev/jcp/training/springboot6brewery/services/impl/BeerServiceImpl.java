@@ -69,8 +69,36 @@ public class BeerServiceImpl implements BeerService {
 
 
     @Override
-    public List<BeerDTO> listBeers() {
-        return new ArrayList<>(beerMap.values());
+    public List<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, boolean showInventory) {
+        ArrayList<BeerDTO> beers;
+        if (StringUtils.hasText(beerName) && Objects.isNull(beerStyle)) {
+            beers = (ArrayList<BeerDTO>) getBeersByName(beerName);
+        } else if (!StringUtils.hasText(beerName) && Objects.nonNull(beerStyle)) {
+            beers = (ArrayList<BeerDTO>) getBeersByStyle(beerStyle);
+        } else if (StringUtils.hasText(beerName) && Objects.nonNull(beerStyle)){
+            beers = (ArrayList<BeerDTO>) getBeersByNameAndStyle(beerName, beerStyle);
+        } else {
+            beers = new ArrayList<>(beerMap.values());
+        }
+        if (Boolean.FALSE.equals(showInventory)) {
+            beers.forEach(beer -> beer.setQuantityOnHand(null));
+        }
+        return beers;
+    }
+
+    private List<BeerDTO> getBeersByName(String beerName) {
+        ArrayList<BeerDTO> beers = new ArrayList<>(beerMap.values());
+        return beers.stream().filter(beerDTO -> beerDTO.getBeerName().contains(beerName)).toList();
+    }
+
+    private List<BeerDTO> getBeersByStyle(BeerStyle beerStyle) {
+        ArrayList<BeerDTO> beers = new ArrayList<>(beerMap.values());
+        return beers.stream().filter(beerDTO -> beerDTO.getBeerStyle() == beerStyle).toList();
+    }
+
+    private List<BeerDTO> getBeersByNameAndStyle(String beerName, BeerStyle beerStyle) {
+        ArrayList<BeerDTO> beers = new ArrayList<>(beerMap.values());
+        return beers.stream().filter(beerDTO -> beerDTO.getBeerName().contains(beerName) && beerDTO.getBeerStyle() == beerStyle).toList();
     }
 
     @Override
@@ -80,6 +108,10 @@ public class BeerServiceImpl implements BeerService {
 
     @Override
     public Optional<BeerDTO> saveBeer(BeerDTO beer) {
+        if (!isValid(beer)) {
+            return Optional.empty();
+        }
+
         BeerDTO savedBeer = BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .version(1)
@@ -144,4 +176,10 @@ public class BeerServiceImpl implements BeerService {
         return true;
     }
 
+    private boolean isValid(BeerDTO beer) {
+        return StringUtils.hasText(beer.getBeerName())
+                && Objects.nonNull(beer.getBeerStyle())
+                && StringUtils.hasText(beer.getUpc())
+                && Objects.nonNull(beer.getPrice());
+    }
 }
