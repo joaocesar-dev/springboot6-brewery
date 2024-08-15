@@ -4,6 +4,8 @@ import br.dev.jcp.training.springboot6brewery.models.BeerDTO;
 import br.dev.jcp.training.springboot6brewery.models.BeerStyle;
 import br.dev.jcp.training.springboot6brewery.services.BeerService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -69,7 +71,7 @@ public class BeerServiceImpl implements BeerService {
 
 
     @Override
-    public List<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, boolean showInventory) {
+    public Page<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, boolean showInventory, Integer pageNumber, Integer pageSize) {
         ArrayList<BeerDTO> beers;
         if (StringUtils.hasText(beerName) && Objects.isNull(beerStyle)) {
             beers = (ArrayList<BeerDTO>) getBeersByName(beerName);
@@ -83,7 +85,7 @@ public class BeerServiceImpl implements BeerService {
         if (Boolean.FALSE.equals(showInventory)) {
             beers.forEach(beer -> beer.setQuantityOnHand(null));
         }
-        return beers;
+        return new PageImpl<>(beers);
     }
 
     private List<BeerDTO> getBeersByName(String beerName) {

@@ -57,33 +57,36 @@ class BeerControllerIT {
 
     @Test
     void shouldReturnAllBeers() {
-        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true);
-        assertThat(beerDtoList).hasSize(2413);
+        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true, 1, 2500).getContent();
+        assertThat(beerDtoList).hasSize(1000);
     }
 
     @Test
     void shouldReturnBeersByName() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
-                        .queryParam("beerName", "IPA"))
+                        .queryParam("beerName", "IPA")
+                        .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(336)));
+                .andExpect(jsonPath("$.content.size()", is(336)));
     }
 
     @Test
     void shouldReturnBeersByStyle() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
-                        .queryParam("beerStyle", BeerStyle.IPA.name()))
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(548)));
+                .andExpect(jsonPath("$.content.size()", is(548)));
     }
 
     @Test
     void shouldReturnBeersByNameAndStyle() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA")
-                        .queryParam("beerStyle", BeerStyle.IPA.name()))
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)));
+                .andExpect(jsonPath("$.content.size()", is(310)));
     }
 
     @Test
@@ -91,21 +94,37 @@ class BeerControllerIT {
         mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
-                        .queryParam("showInventory", "true"))
+                        .queryParam("showInventory", "true")
+                        .queryParam("pageSize", "800"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)))
-                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.notNullValue()));
+                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
     }
 
     @Test
     void shouldReturnBeersByNameAndStyleAndNotShowInventory() throws Exception {
         mockMvc.perform(get(BeerController.BEER_PATH)
+                        .queryParam("beerName", "%IPA%")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("showInventory", "false")
+                        .queryParam("pageSize", "800"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.size()", is(310)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.nullValue()));
+    }
+
+    @Test
+    void shouldReturnBeersByNameAndStyleWithInventoryPageTwo() throws Exception {
+        mockMvc.perform(get(BeerController.BEER_PATH)
                         .queryParam("beerName", "IPA")
                         .queryParam("beerStyle", BeerStyle.IPA.name())
-                        .queryParam("showInventory", "false"))
+                        .queryParam("showInventory", "true")
+                        .queryParam("pageNumber", "2")
+                        .queryParam("pageSize", "50"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()", is(310)))
-                .andExpect(jsonPath("$.[0].quantityOnHand").value(IsNull.nullValue()));
+                .andExpect(jsonPath("$.content.size()", is(50)))
+                .andExpect(jsonPath("$.content[0].quantityOnHand").value(IsNull.notNullValue()));
+
     }
 
     @Rollback
@@ -113,7 +132,7 @@ class BeerControllerIT {
     @Test
     void shouldReturnEmptyList() {
         beerRepository.deleteAll();
-        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true);
+        List<BeerDTO> beerDtoList = beerController.listBeers(null, null, true, 1, 25).getContent();
         assertThat(beerDtoList).isEmpty();
     }
 
@@ -156,7 +175,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void shouldUpdateBeer() {
-        BeerDTO beerDTO = beerController.listBeers(null, null, true).getFirst();
+        BeerDTO beerDTO = beerController.listBeers(null, null, true, 1, 25).getContent().getFirst();
         UUID beerId = beerDTO.getId();
         beerDTO.setId(null);
         beerDTO.setVersion(null);

@@ -6,6 +6,7 @@ import br.dev.jcp.training.springboot6brewery.models.BeerStyle;
 import br.dev.jcp.training.springboot6brewery.services.BeerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,11 +45,13 @@ public class BeerController {
     }
 
     @GetMapping(value = BEER_PATH)
-    public List<BeerDTO> listBeers(@RequestParam(required = false) String beerName,
+    public Page<BeerDTO> listBeers(@RequestParam(required = false) String beerName,
                                    @RequestParam(required = false) BeerStyle beerStyle,
-                                   @RequestParam(required = false) Boolean showInventory) {
+                                   @RequestParam(required = false) Boolean showInventory,
+                                   @RequestParam(required = false) Integer pageNumber,
+                                   @RequestParam(required = false) Integer pageSize) {
         boolean showInventoryNormalized = showInventory == null || showInventory;
-        return beerService.listBeers(beerName, beerStyle, showInventoryNormalized);
+        return beerService.listBeers(beerName, beerStyle, showInventoryNormalized, pageNumber, pageSize);
     }
 
     @GetMapping(value = BEER_PATH_ID)

@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -68,7 +70,7 @@ class BeerControllerTest {
 
     @Test
     void shouldPatchBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, true).getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, true, 1, 25).getContent().getFirst();
         Map<String, Object> beerMap = new HashMap<>();
         beerMap.put("beerName", "Changed Name");
         beer.setBeerName("Changed Name");
@@ -85,7 +87,7 @@ class BeerControllerTest {
 
     @Test
     void shouldDeleteBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, true).getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, true, 1, 25).getContent().getFirst();
         given(beerService.deleteBeer(any())).willReturn(true);
         mockMvc.perform(delete(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON))
@@ -96,7 +98,7 @@ class BeerControllerTest {
 
     @Test
     void shouldUpdateBeer() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, true).getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, true, 1, 25).getContent().getFirst();
         given(beerService.updateBeer(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
                     .accept(MediaType.APPLICATION_JSON)
@@ -108,7 +110,7 @@ class BeerControllerTest {
 
     @Test
     void shouldReturnBadRequestUpdateWithBlankName() throws Exception {
-        BeerDTO beer = beerServiceImpl.listBeers(null, null, true).getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers(null, null, true, 1, 25).getContent().getFirst();
         beer.setBeerName("");
         given(beerService.updateBeer(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(beer));
         mockMvc.perform(put(BeerController.BEER_PATH_ID, beer.getId())
@@ -174,13 +176,14 @@ class BeerControllerTest {
 
     @Test
     void shouldReturnAllBeers() throws Exception {
-        given(beerService.listBeers(null, null, true)).willReturn(createPersistedBeerList());
+        Page<BeerDTO> beerPage = new PageImpl<>(createPersistedBeerList());
+        given(beerService.listBeers(null, null, true, null, null)).willReturn(beerPage);
 
         mockMvc.perform(get(BeerController.BEER_PATH)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()", is(3)));
+                .andExpect(jsonPath("$.content.length()", is(3)));
     }
 
     private BeerDTO createPersistedBeer() {
